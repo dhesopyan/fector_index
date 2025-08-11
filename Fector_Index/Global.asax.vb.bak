@@ -1,0 +1,48 @@
+﻿' Note: For instructions on enabling IIS6 or IIS7 classic mode, 
+' visit http://go.microsoft.com/?LinkId=9394802
+Imports System.Web.Http
+Imports System.Web.Optimization
+
+Public Class MvcApplication
+    Inherits System.Web.HttpApplication
+
+    Sub Application_Start()
+        Dim server As String = ConfigurationManager.AppSettings("Server")
+        Dim db As String = ConfigurationManager.AppSettings("DB")
+
+        AppHelper.CS = "Server=" & System.Configuration.ConfigurationManager.AppSettings("Server") & ";Database=" & System.Configuration.ConfigurationManager.AppSettings("DB") & ";User ID=userptkd; Password=ptkd"
+
+        AreaRegistration.RegisterAllAreas()
+        WebApiConfig.Register(GlobalConfiguration.Configuration)
+        FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters)
+        RouteConfig.RegisterRoutes(RouteTable.Routes)
+        BundleConfig.RegisterBundles(BundleTable.Bundles)
+        AuthConfig.RegisterAuth()
+
+        ModelBinders.Binders.Add(GetType(Nullable(Of Decimal)), New DecimalModelBinder())
+    End Sub
+
+    Private Sub MvcApplication_AcquireRequestState(sender As Object, e As EventArgs) Handles Me.AcquireRequestState
+        Dim db As New FectorEntities
+        If Not (Context.Request.Url.AbsoluteUri.ToLower.Contains("/user/logout") Or Context.Request.Url.AbsoluteUri.ToLower.Contains("/user/login") Or Context.Request.Url.PathAndQuery = "/") Then
+            If Not IsNothing(HttpContext.Current.Session) AndAlso Not IsNothing(HttpContext.Current.Session("SessionId")) Then
+                Dim forcePasswordChange As Boolean = False
+                If Not IsNothing(HttpContext.Current.Session("HasToChangePassword")) Then
+                    forcePasswordChange = HttpContext.Current.Session("HasToChangePassword")
+                End If
+                If forcePasswordChange And Not Context.Request.Url.AbsoluteUri.ToLower.Contains("/user/changepassword") Then
+                    Context.Response.Redirect("~/User/ChangePassword")
+                End If
+                If Not Fector_Index.LogUser.checkSession(User.Identity.Name, HttpContext.Current.Session("SessionId")) Then
+                    Context.Response.Redirect("~/User/Logout")
+                End If
+
+                ''''''''Check User Access''''''''
+
+
+                ''''''''Update Expired Time''''''''
+                Fector_Index.LogUser.openPage(User.Identity.Name, HttpContext.Current.Session("SessionId"))
+            End If
+        End If
+    End Sub
+End Class

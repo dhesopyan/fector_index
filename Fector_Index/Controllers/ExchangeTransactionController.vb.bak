@@ -1,0 +1,806 @@
+﻿Imports System.Net
+Imports System.Data.Objects.SqlClient
+Imports System.IO
+Imports System.Data.Entity.Validation
+
+Public Class ExchangeTransactionController
+    Inherits System.Web.Mvc.Controller
+
+    Public tempDealNumber As String = ""
+
+    Dim RateTypeOption As IEnumerable(Of SelectListItem) = {New SelectListItem With {.Text = "TT", .Value = "TT"}, _
+                                                            New SelectListItem With {.Text = "Bank Notes", .Value = "BN"}}
+
+    Dim TransactionTypeOption As IEnumerable(Of SelectListItem) = {New SelectListItem With {.Text = "Sell", .Value = "Sell"}, _
+                                                            New SelectListItem With {.Text = "Buy", .Value = "Buy"}}
+
+    Dim DealPeriodOption As IEnumerable(Of SelectListItem) = {New SelectListItem With {.Text = "TOD", .Value = "TOD"}, _
+                                                              New SelectListItem With {.Text = "TOM", .Value = "TOM"}, _
+                                                              New SelectListItem With {.Text = "SPOT", .Value = "SPOT"}}
+
+    Dim SourceFundsOption As IEnumerable(Of SelectListItem) = {New SelectListItem With {.Text = "Cash", .Value = "Cash"}, _
+                                                            New SelectListItem With {.Text = "Debit", .Value = "Debit"}}
+
+    ' GET: /ExchangeTransaction/Index
+    <Authorize> _
+    Function Index() As ActionResult
+        ViewBag.Breadcrumb = String.Format("<a href='#'>Home</a> > Exchange Transaction")
+        Return View("Index")
+    End Function
+
+    ' GET: /ExchangeTransaction/Approval
+    <Authorize> _
+    Public Function Approval() As ActionResult
+        ViewBag.Breadcrumb = String.Format("<a href=''>Home</a> > <a href=''>Transaction Deal</a> > Approval")
+        Return View("Index")
+    End Function
+
+    '
+    ' POST: /ExchangeTransaction/Delete
+    <Authorize> _
+    <HttpPost> _
+    Public Function Delete() As ActionResult
+        Dim db As New FectorEntities()
+        Dim id As String = Request.Form("id")
+        Dim model As New ExchangeTransactionViewModel
+        model.TransNum = "(AUTO)"
+        ViewData("Title") = "Create Exchange Transaction"
+        ViewBag.Breadcrumb = String.Format("<a href='#'>Home</a> > <a href='#'>Exchange Transaction</a> > Create")
+        ViewBag.Branch = New SelectList(db.Branches, "BranchId", "BranchDisplay")
+        ViewBag.DocumentTransOption = New SelectList(db.DocumentTransaction, "DocumentId", "DocumentTransactionDisplay")
+        ViewBag.PurposeIdOption = New SelectList(db.Purposes, "PurposeId", "PurposeDisplay")
+        ViewBag.Currency = New SelectList(db.ExchangeRate, "CurrId", "CurrencyDisplay")
+        ViewBag.SourceFundsOption = SourceFundsOption
+        ViewBag.RateType = RateTypeOption
+        ViewBag.TransactionTypeOption = TransactionTypeOption
+        ViewBag.DealPeriodOption = DealPeriodOption
+
+        Dim ListDeal As String = Session("tmpDealNum")
+        Dim List As New List(Of String)
+        For i As Integer = 0 To ListDeal.Split(CChar(",")).Length - 1
+            List.Add(ListDeal.Split(CChar(","))(i))
+        Next
+
+        If List.Contains(id) = True Then
+            List.Remove(id)
+        End If
+        Dim GetDealNumNow As String = ""
+
+        If List.Count > 0 Then
+            For i As Integer = 0 To List.Count - 1
+                GetDealNumNow &= List(i) + ","
+            Next
+            GetDealNumNow = GetDealNumNow.Substring(0, GetDealNumNow.Length - 1)
+            Session("tmpDealNum") = GetDealNumNow
+        Else
+            Session("tmpDealNum") = ""
+        End If
+
+        'Return View("Detail", model)
+        Return Redirect(ControllerContext.HttpContext.Request.UrlReferrer.ToString())
+    End Function
+
+    '
+    ' Get: /ExchangeTransaction/Counter
+    <Authorize> _
+    Public Function Counter() As ActionResult
+        Dim model As New ExchangeTransactionViewModel
+        Dim db As New FectorEntities
+
+        model.TransNum = "(AUTO)"
+        ViewData("Title") = "Create Counter Transaction"
+        ViewBag.Breadcrumb = "Home > Exchange Transaction > Counter"
+        ViewBag.Branch = New SelectList(db.Branches, "BranchId", "BranchDisplay")
+        ViewBag.DocumentTransOption = New SelectList(db.DocumentTransaction.Where(Function(f) f.Status = "ACTIVE"), "DocumentId", "Description")
+        ViewBag.PurposeIdOption = New SelectList(db.Purposes.Where(Function(f) f.Status = "ACTIVE"), "PurposeId", "PurposeDisplay")
+        ViewBag.CurrencyNoIDR = New SelectList(db.ExchangeRate.Where(Function(f) f.CurrId <> "IDR"), "CurrId", "CurrencyDisplay")
+        ViewBag.Currency = New SelectList(db.ExchangeRate, "CurrId", "CurrencyDisplay")
+        ViewBag.SourceFundsOption = SourceFundsOption
+        ViewBag.RateType = RateTypeOption
+        ViewBag.TransactionTypeOption = TransactionTypeOption
+        ViewBag.DealPeriodOption = DealPeriodOption
+        ViewBag.LHBUDocumentOption = New SelectList(db.DocumentLHBU.Where(Function(f) f.Status = "ACTIVE"), "DocumentId", "DocumentLHBUDisplay")
+
+        model.UseDeal = False
+        model.TransactionNominal = 0
+        model.BranchId = Session("BranchId")
+
+        Return View("Detail", model)
+    End Function
+
+    '
+    ' Post: /ExchangeTransaction/Counter
+    <HttpPost> _
+    <ValidateAntiForgeryToken> _
+    <Authorize> _
+    Public Function Counter(model As ExchangeTransactionViewModel, FileDocumentTransaction As HttpPostedFileBase) As ActionResult
+        Dim db As New FectorEntities
+        Dim file As HttpPostedFileBase = model.FileDocumentTransaction
+        model.TransNum = "(AUTO)"
+        ViewData("Title") = "Create Counter Transaction"
+        ViewBag.Breadcrumb = "Home > Exchange Transaction > Counter"
+        ViewBag.Branch = New SelectList(db.Branches, "BranchId", "BranchDisplay")
+        ViewBag.DocumentTransOption = New SelectList(db.DocumentTransaction.Where(Function(f) f.Status = "ACTIVE"), "DocumentId", "Description")
+        ViewBag.PurposeIdOption = New SelectList(db.Purposes.Where(Function(f) f.Status = "ACTIVE"), "PurposeId", "PurposeDisplay")
+        ViewBag.CurrencyNoIDR = New SelectList(db.ExchangeRate.Where(Function(f) f.CurrId <> "IDR"), "CurrId", "CurrencyDisplay")
+        ViewBag.Currency = New SelectList(db.ExchangeRate, "CurrId", "CurrencyDisplay")
+        ViewBag.SourceFundsOption = SourceFundsOption
+        ViewBag.RateType = RateTypeOption
+        ViewBag.TransactionTypeOption = TransactionTypeOption
+        ViewBag.DealPeriodOption = DealPeriodOption
+        ViewBag.LHBUDocumentOption = New SelectList(db.DocumentLHBU.Where(Function(f) f.Status = "ACTIVE"), "DocumentId", "DocumentLHBUDisplay")
+
+        If ModelState.IsValid Then
+            Dim transnum As Decimal = 0
+            Dim tdate As DateTime = Now
+            Dim branchid As String = Session("BranchId")
+            Dim accno As String = model.AccNum
+            Dim accname As String = model.AccName
+            Dim trantype As String = model.TransactionType
+            Dim ratetype As String = model.RateType
+            Dim basecurr As String = model.TransactionCurrency
+            Dim countercurr As String = model.CustomerCurrency
+            Dim bsubjectstatusid As String = ""
+            Dim bbankcode As String = ""
+            Dim bcountryid As String = ""
+            Dim bbusinesstypeid As String = ""
+            Dim ssubjectstatusid As String = ""
+            Dim sbankcode As String = ""
+            Dim scountryid As String = ""
+            Dim sbusinesstypeid As String = ""
+            Dim sourcefund As String = model.SourceFunds
+            Dim doctransid As String = model.DocumentTransId
+            Dim purposeid As String = model.PurposeId
+            Dim doctranslink As String = ""
+            Dim docstatementlink As String = ""
+            Dim transformlink As String = ""
+            Dim editby As String = User.Identity.Name
+            Dim editdate As DateTime = Now
+            Dim status As String = "COUNTER - PENDING"
+            Dim flagreconcile As Integer = 0
+            Dim dealnumber As String = ""
+            Dim transcurr As String = model.TransactionCurrency
+            Dim transrate As Decimal = model.TransactionRate
+            Dim transamount As Decimal = model.TransactionNominal
+            Dim customercurr As String = model.CustomerCurrency
+            Dim customeramount As Decimal = model.CustomerNominal
+            Dim valperiod As String = model.ValuePeriod
+            Dim valdate As DateTime = AppHelper.dateConvert(model.ValueDate)
+
+            Dim custinfo = (From accext In db.AccountsExtension
+                               Join acc In db.Accounts On accext.AccNo Equals acc.CIF
+                               Where acc.AccNo = accno
+                               Select New With {.ssid = acc.SubjectStatusId, .bc = acc.BICode, .cid = acc.CountryId, .btid = acc.BusinessTypeId}).FirstOrDefault
+
+            If custinfo.cid Is Nothing Then
+                ModelState.AddModelError("AccNum", "Country not found for this customer, please complete the country in LLD")
+
+                model.FileDocumentStatementName = ""
+                model.FileDocumentTransactionName = ""
+                model.FileTransFormulirName = ""
+
+                Return View("Detail", model)
+            End If
+
+            If trantype = "Buy" Then
+                'Fill Buyer with Bank Information
+                bsubjectstatusid = MsSetting.GetSetting("Bank", "SubjectStatusId", "", 1)
+                bbankcode = MsSetting.GetSetting("Bank", "BICode", "", 1)
+                bcountryid = MsSetting.GetSetting("Bank", "CountryID", "", 1)
+                bbusinesstypeid = MsSetting.GetSetting("Bank", "BusinessTypeID", "", 1)
+
+                ssubjectstatusid = custinfo.ssid
+                sbankcode = custinfo.bc
+                scountryid = custinfo.cid
+                sbusinesstypeid = custinfo.btid
+            Else
+                'Fill Seller with Bank Information
+                ssubjectstatusid = MsSetting.GetSetting("Bank", "SubjectStatusId", "", 1)
+                sbankcode = MsSetting.GetSetting("Bank", "BICode", "", 1)
+                scountryid = MsSetting.GetSetting("Bank", "CountryID", "", 1)
+                sbusinesstypeid = MsSetting.GetSetting("Bank", "BusinessTypeID", "", 1)
+
+                bsubjectstatusid = custinfo.ssid
+                bbankcode = custinfo.bc
+                bcountryid = custinfo.cid
+                bbusinesstypeid = custinfo.btid
+            End If
+
+            Dim th As New ExchangeTransactionHead
+            th.AccName = accname
+            th.AccNum = accno
+            th.ApproveBy = ""
+            th.ApproveDate = New DateTime(1900, 1, 1)
+            th.BBankCode = bbankcode
+            th.BBusinessTypeId = bbusinesstypeid
+            th.BCountryId = bcountryid
+            th.BranchId = branchid
+            th.BSubjectStatusId = bsubjectstatusid
+            th.DocumentStatementLink = docstatementlink
+            th.DocumentTransactionLink = doctranslink
+            th.DocumentTransId = doctransid
+            th.EditBy = editby
+            th.EditDate = editdate
+            th.FlagReconsile = flagreconcile
+            th.PurposeId = purposeid
+            th.RateType = ratetype
+            th.SBankCode = sbankcode
+            th.SBusinessTypeId = sbusinesstypeid
+            th.SCountryId = scountryid
+            th.SourceFunds = sourcefund
+            th.SSubjectStatusId = ssubjectstatusid
+            th.Status = status
+            th.TDate = tdate
+            th.TransactionType = trantype
+            th.TransFormulirLink = transformlink
+
+            db.ExchangeTransactionHead.Add(th)
+            db.SaveChanges()
+
+            transnum = th.TransNum
+            If Not IsNothing(model.FileDocumentStatement) Then
+                If model.FileDocumentStatement.ContentLength > 0 Then
+                    Dim filenamesplit As String() = model.FileDocumentStatement.FileName.Split(".")
+                    Dim filename As String = "DocStatement." & filenamesplit(filenamesplit.Length - 1)
+                    Dim Path As String = Server.MapPath("~/App_Data/Uploads/Transaction/" & transnum & "/")
+
+                    If Not IO.Directory.Exists(Path) Then
+                        IO.Directory.CreateDirectory(Path)
+                    End If
+
+                    th.DocumentStatementLink = "~/App_Data/Uploads/Transaction/" & transnum & "/" & filename
+                    model.FileDocumentStatement.SaveAs(Path & filename)
+                End If
+            End If
+
+            If Not IsNothing(model.FileDocumentTransaction) Then
+                If model.FileDocumentTransaction.ContentLength > 0 Then
+                    Dim filenamesplit As String() = model.FileDocumentTransaction.FileName.Split(".")
+                    Dim filename As String = "DocTrans." & filenamesplit(filenamesplit.Length - 1)
+                    Dim Path As String = Server.MapPath("~/App_Data/Uploads/Transaction/" & transnum & "/")
+
+                    If Not IO.Directory.Exists(Path) Then
+                        IO.Directory.CreateDirectory(Path)
+                    End If
+
+                    th.DocumentTransactionLink = "~/App_Data/Uploads/Transaction/" & transnum & "/" & filename
+                    model.FileDocumentTransaction.SaveAs(Path & filename)
+                End If
+            End If
+            
+            If Not IsNothing(model.FileTransFormulir) Then
+                If model.FileTransFormulir.ContentLength > 0 Then
+                    Dim filenamesplit As String() = model.FileTransFormulir.FileName.Split(".")
+                    Dim filename As String = "TransForm." & filenamesplit(filenamesplit.Length - 1)
+                    Dim Path As String = Server.MapPath("~/App_Data/Uploads/Transaction/" & transnum & "/")
+
+                    If Not IO.Directory.Exists(Path) Then
+                        IO.Directory.CreateDirectory(Path)
+                    End If
+
+                    th.TransFormulirLink = "~/App_Data/Uploads/Transaction/" & transnum & "/" & filename
+                    model.FileTransFormulir.SaveAs(Path & filename)
+                End If
+            End If
+            
+            db.Entry(th).State = EntityState.Modified
+            db.SaveChanges()
+
+            Dim td As New ExchangeTransactionDetail
+            td.CustomerCurrency = customercurr
+            td.CustomerNominal = customeramount
+            td.DealNumber = dealnumber
+            td.TransactionCurrency = transcurr
+            td.TransactionNominal = transamount
+            td.TransactionRate = transrate
+            td.TransNum = transnum
+            td.ValueDate = valdate
+            td.ValuePeriod = valperiod
+
+            db.ExchangeTransactionDetail.Add(td)
+            Try
+                db.SaveChanges()
+            Catch ex As DbEntityValidationException
+                For Each eve In ex.EntityValidationErrors
+                    Dim errmessage = eve.ValidationErrors.Count
+                Next
+            End Try
+
+            Return RedirectToAction("Index", "Home")
+        End If
+
+        model.FileDocumentStatementName = ""
+        model.FileDocumentTransactionName = ""
+        model.FileTransFormulirName = ""
+
+        Return View("Detail", model)
+    End Function
+
+    '
+    ' Post:  /ExchangeTransaction/JsOnGetRate
+    <HttpPost> _
+    Public Function JsOnGetRate(tranType As String, rateType As String, fromCurr As String, toCurr As String) As ActionResult
+        Dim db As New FectorEntities
+        Dim exchangeRate As Decimal = 0
+        Dim baserate = (From ex In db.ExchangeRate
+                       Where ex.CurrId = fromCurr
+                       Select New With {.BNBuyRate = ex.BNBuyRate, .BNSellRate = ex.BNSellRate, _
+                                       .TTSellRate = ex.TTSellRate, .TTBuyRate = ex.TTBuyRate}).FirstOrDefault
+
+        If IsNothing(baserate) Then
+            Return Json(New With {.exchangeRate = exchangeRate})
+        End If
+
+        Dim counterrate = (From ex In db.ExchangeRate
+                           Where ex.CurrId = toCurr
+                           Select New With {.BNBuyRate = ex.BNBuyRate, .BNSellRate = ex.BNSellRate, _
+                                       .TTSellRate = ex.TTSellRate, .TTBuyRate = ex.TTBuyRate}).FirstOrDefault
+
+        If IsNothing(baserate) Then
+            Return Json(New With {.exchangeRate = exchangeRate})
+        End If
+
+        If tranType = "Sell" Then
+            If rateType = "TT" Then
+                exchangeRate = baserate.TTSellRate / counterrate.TTBuyRate
+            Else
+                exchangeRate = baserate.BNSellRate / counterrate.BNBuyRate
+            End If
+        Else
+            If rateType = "TT" Then
+                exchangeRate = baserate.TTBuyRate / counterrate.TTSellRate
+            Else
+                exchangeRate = baserate.BNBuyRate / counterrate.BNSellRate
+            End If
+        End If
+
+        Return Json(New With {.exchangeRate = exchangeRate})
+    End Function
+
+    '
+    ' Post:  /ExchangeTransaction/JsOnGetValueDate
+    <HttpPost> _
+    Public Function JsOnGetValueDate(valuetype As String) As ActionResult
+        Dim db As New FectorEntities
+        Dim exchangeRate As Decimal = 0
+        Dim valDate As Date
+
+        If valuetype = "TOD" Then
+            valDate = Now
+        ElseIf valuetype = "TOM" Then
+            Dim tempDate As DateTime = Now.AddDays(1)
+            valDate = getWorkingDate(tempDate)
+        ElseIf valuetype = "SPOT" Then
+            Dim tempDate As DateTime = Now.AddDays(2)
+            valDate = getWorkingDate(tempDate)
+        End If
+
+        Return Json(New With {.valueDate = valDate.ToString("dd-MM-yyyy")})
+    End Function
+
+    Private Function getWorkingDate(ByVal dtInitial As DateTime) As DateTime
+        If isHoliday(dtInitial) Then
+            Return getWorkingDate(dtInitial.AddDays(1))
+        Else
+            Return dtInitial
+        End If
+    End Function
+
+    Private Function isHoliday(ByVal dtCheck As DateTime) As Boolean
+        If dtCheck.DayOfWeek = DayOfWeek.Sunday Or dtCheck.DayOfWeek = DayOfWeek.Saturday Then
+            Return True
+        End If
+
+        Dim db As New FectorEntities
+        Dim holiday = (From hl In db.Holidays
+                      Where dtCheck.Date <= hl.EndDate And dtCheck.Date >= hl.StartDate
+                      Select New With {hl.HolidayDesc}).FirstOrDefault
+
+        If IsNothing(holiday) Then
+            Return False
+        Else
+            Return True
+        End If
+    End Function
+
+    Class DocumentReqOutput
+        Public Property UnderLimit As Boolean
+        Public Property HaveStatementLetter As Boolean
+        Public Property HaveNPWP As Boolean
+        Public Property UnderlyingisFinal As Boolean
+        Public Property StatementLetterLink As String
+    End Class
+
+    '
+    ' Post:  /ExchangeTransaction/JsOnGetValueDate
+    Public Function JsOnCheckDocumentRequirement(accno As Decimal, convertedamount As Decimal, countercurrency As String, trantype As String, ratetype As String, doctrans As String) As ActionResult
+        Dim db As New FectorEntities
+        Dim cif As Decimal = db.Accounts.Where(Function(f) f.AccNo = accno).FirstOrDefault.CIF
+        Dim limit As Decimal = CDec(MsSetting.GetSetting("Transaction", "Limit", "", 1))
+        Dim limitcurrency As String = MsSetting.GetSetting("Transaction", "Limit", "", 2)
+        Dim out As New DocumentReqOutput
+
+        Dim usage = (From ac In db.Accounts
+                    Join th In db.ExchangeTransactionHead On ac.AccNo Equals th.AccNum
+                    Join td In db.ExchangeTransactionDetail On th.TransNum Equals td.TransNum
+                    Join ex In db.ExchangeRate On td.CustomerCurrency Equals ex.CurrId
+                    Where ac.CIF = cif And td.ValueDate.Value.Month = Now.Month And td.ValueDate.Value.Year = Now.Year
+                    Select td.CustomerNominal * CDec(If(trantype = "SELL", If(ratetype = "BN", ex.BNSellRate, ex.TTSellRate), If(ratetype = "BN", ex.BNBuyRate, ex.TTBuyRate)))).Sum()
+
+        Dim currentusage = (From ex In db.ExchangeRate
+                            Where ex.CurrId = countercurrency
+                            Select convertedamount * CDec(If(trantype = "SELL", If(ratetype = "BN", ex.BNSellRate, ex.TTSellRate), If(ratetype = "BN", ex.BNBuyRate, ex.TTBuyRate)))).Sum()
+        If IsNothing(usage) Then
+            usage = 0
+        End If
+        usage += currentusage
+
+        limit = limit * CDec(db.ExchangeRate.Where(Function(f) f.CurrId = limitcurrency).Select(Function(f) If(trantype = "SELL", If(ratetype = "BN", f.BNSellRate, f.TTSellRate), If(ratetype = "BN", f.BNBuyRate, f.TTBuyRate))).FirstOrDefault)
+
+        If CDec(usage) < CDec(limit) Then
+            out.UnderLimit = True
+        Else
+            out.UnderLimit = False
+        End If
+
+        Dim npwpCount = db.Accounts.Where(Function(f) f.CIF = cif And f.NPWP.Length > 0).Count
+        If npwpCount > 1 Then
+            out.HaveNPWP = True
+        Else
+            out.HaveNPWP = False
+        End If
+
+        Dim lastTran = (From acc In db.Accounts
+                       Join th In db.ExchangeTransactionHead On acc.AccNo Equals th.AccNum
+                       Join td In db.ExchangeTransactionDetail On th.TransNum Equals td.TransNum
+                       Join doc In db.DocumentTransaction On th.DocumentTransId Equals doc.DocumentId
+                       Order By td.ValueDate
+                       Where td.ValueDate.Value.Month = Now.Month And td.ValueDate.Value.Year = Now.Year And acc.CIF = cif
+                       Select New With {.statement = th.DocumentStatementLink, .docstatus = doc.DocumentType}).FirstOrDefault
+
+        If IsNothing(lastTran) Then
+            out.UnderlyingisFinal = False
+            out.HaveStatementLetter = False
+        Else
+            If lastTran.statement.Length > 0 Then
+                out.HaveStatementLetter = True
+                out.StatementLetterLink = lastTran.statement
+                If lastTran.docstatus = "Final" Then
+                    out.UnderlyingisFinal = True
+                Else
+                    out.UnderlyingisFinal = False
+                End If
+            Else
+                out.HaveStatementLetter = False
+            End If
+        End If
+
+        Return Json(out)
+    End Function
+
+    '
+    ' Get:  /ExchangeTransaction/JsOnGetLHBUDocument
+    <HttpPost> _
+    Public Function JsOnGetLHBUDocument(DocTrans As String) As ActionResult
+        Dim db As New FectorEntities
+        Dim listLHBUDoc As List(Of MsDocumentLHBU)
+
+        listLHBUDoc = (From dt In db.MappingDocument
+                      Join dl In db.DocumentLHBU On dt.DocumentLHBUId Equals dl.DocumentId
+                      Where dt.DocumentTransId = DocTrans
+                      Select dl).ToList
+
+        Return Json(listLHBUDoc)
+    End Function
+
+    '
+    ' Get:  /ExchangeTransaction/JsOnGetLHBUPurpose
+    <HttpPost> _
+    Public Function JsOnGetLHBUPurpose(DocTrans As String) As ActionResult
+        Dim db As New FectorEntities
+        Dim listLHBUPur As List(Of MsPurpose)
+
+        listLHBUPur = (From dt In db.MappingDocumentPurpose
+                      Join pu In db.Purposes On dt.PurposeLHBUId Equals pu.PurposeId
+                      Where dt.DocumentTransId = DocTrans
+                      Select pu).ToList
+
+        Return Json(listLHBUPur)
+    End Function
+
+    Class dealInfo
+        Public Property dealNumber As String
+        Public Property accNumber As String
+        Public Property accName As String
+        Public Property tranType As String
+        Public Property dealType As String
+        Public Property fromCurrency As String
+        Public Property toCurrency As String
+        Public Property exchRate As Decimal
+        Public Property strexchRate As String
+        Public Property valueDate As Date
+        Public Property dealAmount As Decimal
+        Public Property strdealAmount As String
+    End Class
+
+    Dim initDealNumber As String = ""
+
+    <HttpPost> _
+    Public Function JsOnCheckDealNumber(ByVal dealnum As String, ByVal model As ExchangeTransactionViewModel) As ActionResult
+        Dim dealnumber As String = ""
+        Dim db As New FectorEntities
+
+        If Not IsNothing(dealnum) Then
+            dealnumber = dealnum
+        End If
+
+        Dim deal = (From de In db.TransactionDeal
+                   Where de.DealNumber = dealnumber And de.Status = "ACTIVE"
+                   Select New dealInfo With {.dealNumber = de.DealNumber, .accNumber = de.AccNum, _
+                                            .accName = de.AccName, .tranType = de.TransactionType, .dealType = de.DealType, _
+                                            .fromCurrency = de.CurrencyDeal, .toCurrency = de.CurrencyCustomer, _
+                                            .exchRate = de.DealRate, .dealAmount = de.AmountDeal, _
+                                            .valueDate = de.DealDate.Value}).FirstOrDefault
+
+        If IsNothing(deal) Then
+            Return Json(New With {.errMessage = "Deal not found"})
+        Else
+            If deal.valueDate.Date < Now.Date Then
+                Return Json(New With {.errMessage = "Deal already expired"})
+            ElseIf deal.valueDate.Date > Now.Date Then
+                Return Json(New With {.errMessage = "Deal can be used at " & deal.valueDate.ToString("dd/MM/yyyy")})
+            End If
+
+            If initDealNumber <> "" Then
+                If deal.accNumber <> TempData("accNumber") Then
+                    Return Json(New With {.errMessage = "This deal has different account number with previously added deal"})
+                ElseIf deal.accName <> TempData("accName") Then
+                    Return Json(New With {.errMessage = "This deal has different account name with previously added deal"})
+                ElseIf deal.tranType <> TempData("tranType") Then
+                    Return Json(New With {.errMessage = "This deal has different transaction type with previously added deal"})
+                ElseIf deal.tranType <> TempData("fromCurrency") Or deal.toCurrency <> TempData("toCurrency") Then
+                    Return Json(New With {.errMessage = "This deal has different currency with previously added deal"})
+                ElseIf deal.tranType <> TempData("valueDate") Then
+                    Return Json(New With {.errMessage = "This deal has different value date with previously added deal"})
+                End If
+            Else
+                initDealNumber = deal.dealNumber
+            End If
+        End If
+
+        deal.strexchRate = CDec(deal.exchRate).ToString("N2")
+        deal.strdealAmount = CDec(deal.dealAmount).ToString("N2")
+
+        Return Json(deal)
+    End Function
+
+    <Authorize> _
+    <HttpGet> _
+    Public Function DTDealAjaxHandler() As JsonResult
+        Dim db As New FectorEntities()
+        tempDealNumber = Session("tmpDealNum")
+        Dim TransactionDeal = From a In db.TransactionDeal
+                        Where tempDealNumber.Contains(a.DealNumber)
+                        Order By a.DealNumber
+                        Select a
+        Return ReturnDealDataTable(TransactionDeal)
+    End Function
+
+    Private Function ReturnDealDataTable(TransactionDeal As IQueryable(Of TransactionDeal)) As JsonResult
+        Dim totalRecords As Integer = TransactionDeal.Count
+        Dim displayRecord As Integer = 0
+
+        displayRecord = TransactionDeal.Count
+
+        Dim result As New List(Of String())
+        For Each d As TransactionDeal In TransactionDeal
+            result.Add({d.DealNumber, d.AccNum, d.AccName, d.BranchId, d.TransactionType, d.DealType, d.CurrencyDeal, CDec(d.DealRate).ToString("N2"), CDec(d.AmountDeal).ToString("N2"), d.CurrencyCustomer, CDec(d.RateCustomer).ToString("N2"), CDec(d.AmountCustomer).ToString("N2"), d.DealPeriod, CDate(d.DealDate).ToString("dd/MM/yyyy"), d.Status, ""})
+        Next
+
+        Return Json(New With {.iTotalRecords = totalRecords,
+                      .iTotalDisplayRecords = displayRecord,
+                      .aaData = result},
+                      JsonRequestBehavior.AllowGet)
+    End Function
+
+    '<Authorize> _
+    '<HttpGet> _
+    'Public Function DTExchangeTransactionAjaxHandler(param As jQueryDataTableParamModel) As JsonResult
+    '    Dim db As New FectorEntities()
+    '    Dim ExchangeTransaction = From s In db.ExchangeTransaction Select s
+    '    Return ReturnExchangeTransactionDataTable(param, ExchangeTransaction)
+    'End Function
+
+    '<Authorize> _
+    '<HttpGet> _
+    'Public Function DTExchangeTransactionApprovalAjaxHandler(param As jQueryDataTableParamModel) As JsonResult
+    '    Dim db As New FectorEntities()
+    '    Dim ExchangeTransaction = From s In db.ExchangeTransaction.Include("Branch")
+    '                Where s.Status.Contains("PENDING") And s.EditBy <> User.Identity.Name
+    '                Select s
+    '    Return ReturnExchangeTransactionDataTable(param, ExchangeTransaction)
+    'End Function
+
+    'Private Function ReturnExchangeTransactionDataTable(param As jQueryDataTableParamModel, ExchangeTransaction As IQueryable(Of ExchangeTransactionViewModel)) As JsonResult
+    '    Dim totalRecords = ExchangeTransaction.Count
+
+    '    Dim iDisplayLength = Integer.Parse(param.iDisplayLength)
+    '    Dim iDisplayStart = Integer.Parse(param.iDisplayStart)
+
+    '    Dim TransNumSearch As String = If(IsNothing(Request("sSearch_0")), "", Request("sSearch_0"))
+    '    Dim AccNumSearch As String = If(IsNothing(Request("sSearch_1")), "", Request("sSearch_1"))
+    '    Dim AccNameSearch As String = If(IsNothing(Request("sSearch_2")), "", Request("sSearch_2"))
+    '    Dim RateTypeSearch As String = If(IsNothing(Request("sSearch_3")), "", Request("sSearch_3"))
+    '    Dim TransactionTypeSearch As String = If(IsNothing(Request("sSearch_4")), "", Request("sSearch_4"))
+    '    Dim ValuePeriodSearch As String = If(IsNothing(Request("sSearch_5")), "", Request("sSearch_5"))
+    '    Dim StatusSearch As String = If(IsNothing(Request("sSearch_6")), "", Request("sSearch_6"))
+    '    ExchangeTransaction = ExchangeTransaction.Where(Function(f) f.TransNum.Contains(TransNumSearch))
+    '    ExchangeTransaction = ExchangeTransaction.Where(Function(f) f.AccNum.Contains(AccNumSearch))
+    '    ExchangeTransaction = ExchangeTransaction.Where(Function(f) f.AccName.Contains(AccNameSearch))
+    '    ExchangeTransaction = ExchangeTransaction.Where(Function(f) f.RateType.Contains(RateTypeSearch))
+    '    ExchangeTransaction = ExchangeTransaction.Where(Function(f) f.TransactionType.Contains(TransactionTypeSearch))
+    '    ExchangeTransaction = ExchangeTransaction.Where(Function(f) f.ValuePeriod.Contains(ValuePeriodSearch))
+    '    ExchangeTransaction = ExchangeTransaction.Where(Function(f) f.Status.Contains(StatusSearch))
+
+    '    'Detection of sorted column
+    '    Dim sortOrder As String = Request("sSortDir_0")
+    '    Select Case Request("iSortCol_0")
+    '        Case 0
+    '            If sortOrder = "asc" Then
+    '                ExchangeTransaction = ExchangeTransaction.OrderBy(Function(f) f.TransNum)
+    '            Else
+    '                ExchangeTransaction = ExchangeTransaction.OrderByDescending(Function(f) f.TransNum)
+    '            End If
+    '        Case 1
+    '            If sortOrder = "asc" Then
+    '                ExchangeTransaction = ExchangeTransaction.OrderBy(Function(f) f.AccNum)
+    '            Else
+    '                ExchangeTransaction = ExchangeTransaction.OrderByDescending(Function(f) f.AccNum)
+    '            End If
+    '        Case 2
+    '            If sortOrder = "asc" Then
+    '                ExchangeTransaction = ExchangeTransaction.OrderBy(Function(f) f.AccName)
+    '            Else
+    '                ExchangeTransaction = ExchangeTransaction.OrderByDescending(Function(f) f.AccName)
+    '            End If
+    '        Case 3
+    '            If sortOrder = "asc" Then
+    '                ExchangeTransaction = ExchangeTransaction.OrderBy(Function(f) f.RateType)
+    '            Else
+    '                ExchangeTransaction = ExchangeTransaction.OrderByDescending(Function(f) f.RateType)
+    '            End If
+    '        Case 4
+    '            If sortOrder = "asc" Then
+    '                ExchangeTransaction = ExchangeTransaction.OrderBy(Function(f) f.TransactionType)
+    '            Else
+    '                ExchangeTransaction = ExchangeTransaction.OrderByDescending(Function(f) f.TransactionType)
+    '            End If
+    '        Case 5
+    '            If sortOrder = "asc" Then
+    '                ExchangeTransaction = ExchangeTransaction.OrderBy(Function(f) f.ValuePeriod)
+    '            Else
+    '                ExchangeTransaction = ExchangeTransaction.OrderByDescending(Function(f) f.ValuePeriod)
+    '            End If
+    '        Case 6
+    '            If sortOrder = "asc" Then
+    '                ExchangeTransaction = ExchangeTransaction.OrderBy(Function(f) f.Status)
+    '            Else
+    '                ExchangeTransaction = ExchangeTransaction.OrderByDescending(Function(f) f.Status)
+    '            End If
+    '    End Select
+
+    '    Dim result As New List(Of String())
+    '    For Each data As ExchangeTransactionViewModel In ExchangeTransaction
+    '        result.Add({data.TransNum, data.AccNum, data.AccName, data.RateType, data.TransactionType, data.ValuePeriod, data.Status, ""})
+    '    Next
+
+    '    Return Json(New With {.sEcho = param.sEcho,
+    '                  .iTotalRecords = totalRecords,
+    '                  .iTotalDisplayRecords = result.Count(),
+    '                  .aaData = result.Skip(iDisplayStart).Take(iDisplayLength)},
+    '                  JsonRequestBehavior.AllowGet)
+    'End Function
+
+    <Authorize> _
+    <HttpGet> _
+    Public Function SearchDeal(DealNumber As String, JoinStr As String) As String
+        JoinStr = Session("tmpDealNum")
+        Dim db As New FectorEntities()
+        Dim TransType1 As String = ""
+        Dim RateType1 As String = ""
+        Dim TransCurr1 As String = ""
+        Dim CustomerCurr1 As String = ""
+        Dim ValuePeriod1 As String = ""
+        Dim ValueDate1 As String = ""
+
+        Dim TransType2 As String = ""
+        Dim RateType2 As String = ""
+        Dim TransCurr2 As String = ""
+        Dim CustomerCurr2 As String = ""
+        Dim ValuePeriod2 As String = ""
+        Dim ValueDate2 As String = ""
+
+        Dim count As Integer = 0
+        If JoinStr IsNot Nothing Then
+            If JoinStr.Length > 0 Then
+                count = 1
+            End If
+        End If
+
+        Dim deal = (From d In db.TransactionDeal
+                   Where d.DealNumber = DealNumber And d.Status = "ACTIVE").ToList
+
+        If deal.Count > 0 Then
+            If count = 0 Then
+                Session("TransType1") = deal.Item(0).TransactionType
+                Session("RateType1") = deal.Item(0).DealType
+                Session("TransCurr1") = deal.Item(0).CurrencyDeal
+                Session("CustomerCurr1") = deal.Item(0).CurrencyCustomer
+                Session("ValuePeriod1") = deal.Item(0).DealPeriod
+                Session("ValueDate1") = CDate(deal.Item(0).DealDate).ToString("yyyy/MM/dd")
+
+                If JoinStr IsNot Nothing Then
+                    If JoinStr.Length > 0 Then
+                        JoinStr = JoinStr & ","
+                    End If
+                End If
+                Session("tmpDealNum") = JoinStr & deal.Item(0).DealNumber
+                Return JoinStr & deal.Item(0).DealNumber
+            Else
+                TransType1 = Session("TransType1")
+                RateType1 = Session("RateType1")
+                TransCurr1 = Session("TransCurr1")
+                CustomerCurr1 = Session("CustomerCurr1")
+                ValuePeriod1 = Session("ValuePeriod1")
+                ValueDate1 = Session("ValueDate1")
+
+                TransType2 = deal.Item(0).TransactionType
+                RateType2 = deal.Item(0).DealType
+                TransCurr2 = deal.Item(0).CurrencyDeal
+                CustomerCurr2 = deal.Item(0).CurrencyCustomer
+                ValuePeriod2 = deal.Item(0).DealPeriod
+                ValueDate2 = CDate(deal.Item(0).DealDate).ToString("yyyy/MM/dd")
+
+                If TransType1 = TransType2 And RateType1 = RateType2 And TransCurr1 = TransCurr2 And CustomerCurr1 = CustomerCurr2 And ValuePeriod1 = ValuePeriod2 And ValueDate1 = ValueDate2 Then
+                    If JoinStr IsNot Nothing Then
+                        If JoinStr.Length > 0 Then
+                            JoinStr = JoinStr & ","
+                        End If
+                    End If
+                    Session("tmpDealNum") = JoinStr & deal.Item(0).DealNumber
+                    Return JoinStr & deal.Item(0).DealNumber
+                Else
+                    ViewBag.ErrorMessage = "This deal number is not same with another deal"
+                End If
+            End If
+        End If
+
+        ViewBag.ErrorMessage = "The deal number is not found"
+        Return ""
+    End Function
+
+    <HttpPost> _
+    Public Function UploadFile(model As ExchangeTransactionHead) As ActionResult
+        'Dim temp As Integer = model.FileDocumentStatement.ContentLength
+        'Dim File As HttpPostedFileBase = Request.Files("File")
+        'If File.ContentLength > 0 Then
+        '    Dim FileName As String = Path.GetFileName(File.FileName)
+        '    Dim FilePath As String = Path.Combine(Server.MapPath("~/UploadResult"), FileName)
+        '    File.SaveAs(FilePath)
+
+        'End If
+        Return View("Index")
+    End Function
+
+    ' GET: /TransactionDeal/BrowseAccNum
+    <Authorize> _
+    Function BrowseAccNum() As ActionResult
+        Return PartialView("_AccNumBrowser")
+    End Function
+
+    ' GET: /ExchangeTransaction/BrowseDeal
+    <Authorize> _
+    Function BrowseDeal() As ActionResult
+        Return PartialView("_DealInTransaction")
+    End Function
+End Class

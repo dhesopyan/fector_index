@@ -1,0 +1,10 @@
+OB,KODE_OBJEK,NAMA,HARGA_SATUAN
+OB,1,test,10000
+OB,TEST123,TEST,10000
+OB,DODO,Daily Office,1
+OB,SOSO,Service Office,1
+OB,DOMR,Meeting Room,1
+OB,VOBA,Business Address,390000
+OB,VOTS,Telephone Services,410000
+OB,VOST,Virtual Office Standard,825000
+OB,VOPR,Virtual Office Premium,950000

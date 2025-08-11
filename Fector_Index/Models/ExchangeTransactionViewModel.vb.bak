@@ -1,0 +1,107 @@
+﻿Imports System.ComponentModel.DataAnnotations
+Imports System.ComponentModel.DataAnnotations.Schema
+Imports System.ComponentModel
+
+Public Class ExchangeTransactionViewModel
+    <Key> _
+    <DisplayName("Transaction Number")> _
+    Public Property TransNum As String
+
+    Public Property UseDeal As Boolean
+
+    <StringLength(20)> _
+    Public Property DealNumber As String
+
+    <DisplayName("Account Number")> _
+    <StringLength(20)> _
+    <Required(ErrorMessage:="Please select the account number")> _
+    Public Property AccNum As String
+
+    <DisplayName("Account Name")> _
+    <StringLength(50)> _
+    Public Property AccName As String
+
+    <DisplayName("Branch")> _
+    <ForeignKey("Branch")> _
+    Public Property BranchId As String
+    Public Overridable Property Branch As MsBranch
+
+    <DisplayName("Rate Type")> _
+    <StringLength(2)> _
+    <Required(ErrorMessage:="Please select the rate type")> _
+    Public Property RateType As String
+
+    <DisplayName("Transaction Type")> _
+    <StringLength(5)> _
+    <Required(ErrorMessage:="Please select the transaction type")> _
+    Public Property TransactionType As String
+
+    <DisplayName("Source of Funds")> _
+    <StringLength(5)> _
+    <Required(ErrorMessage:="Please select source of funds")> _
+    Public Property SourceFunds As String
+
+    <ForeignKey("DocumentTransaction")> _
+    <DisplayName("Document Transaction")> _
+    <Required(ErrorMessage:="Please select transaction document")> _
+    Public Property DocumentTransId As Integer
+    Public Overridable Property DocumentTransaction As MsDocumentTransaction
+
+    <ForeignKey("DocumentLHBU")> _
+    <DisplayName("LHBU Document")> _
+    <Required(ErrorMessage:="Please select the LHBU document")> _
+    Public Property DocumentLHBUId As String
+    Public Overridable Property DocumentLHBU As MsDocumentLHBU
+
+    <ForeignKey("Purpose")> _
+    <DisplayName("LHBU Purpose")> _
+    <Required(ErrorMessage:="Please select the LHBU purpose")> _
+    Public Property PurposeId As String
+    Public Overridable Property Purpose As MsPurpose
+
+    <DisplayName("Transaction Document")> _
+    Public Property FileDocumentTransactionName As String
+    Public Property FileDocumentTransaction As HttpPostedFileBase
+
+    <DisplayName("Letter of Statement")> _
+    Public Property FileDocumentStatementName As String
+    Public Property FileDocumentStatement As HttpPostedFileBase
+
+    <DisplayName("Previous Letter of Statement")> _
+    Public Property PrevRefDocumentStatementName As String
+
+    <DisplayName("Transaction Form")> _
+    Public Property FileTransFormulirName As String
+    Public Property FileTransFormulir As HttpPostedFileBase
+
+    <DisplayName("Base Currency")> _
+    <Required(ErrorMessage:="Please select the transaction currency")> _
+    Public Property TransactionCurrency As String
+
+    <DisplayName("Base Rate")> _
+    <DisplayFormat(DataFormatString:="{0:N2}", ApplyFormatInEditMode:=True)> _
+    Public Property TransactionRate As Nullable(Of Decimal)
+
+    <DisplayName("Amount")> _
+    <Required(ErrorMessage:="Please fill amount")> _
+    <DisplayFormat(DataFormatString:="{0:N2}", ApplyFormatInEditMode:=True)> _
+    Public Property TransactionNominal As Nullable(Of Decimal)
+
+    <DisplayName("Counter Currency")> _
+    <StringLength(3)> _
+    <Required(ErrorMessage:="Please select the counter currency")> _
+    Public Property CustomerCurrency As String
+
+    <DisplayName("Converted Amount")> _
+    <DisplayFormat(DataFormatString:="{0:N2}", ApplyFormatInEditMode:=True)> _
+    Public Property CustomerNominal As Nullable(Of Decimal)
+
+    <DisplayName("Value Period")> _
+    <StringLength(4)> _
+    <Required(ErrorMessage:="Please select the value period")> _
+    Public Property ValuePeriod As String
+
+    <DisplayName("Value Date")> _
+    Public Property ValueDate As String
+
+End Class

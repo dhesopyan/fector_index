@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<xs:schema id="Schema1" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xs:element name="AdjudicationReceipt" msdata:IsDataSet="true" msdata:UseCurrentLocale="true">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="TransRecap">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="TransNum" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="AccNum" type="xs:string" minOccurs="0" />
+              <xs:element name="AccName" type="xs:string" minOccurs="0" />
+              <xs:element name="BranchId" type="xs:string" minOccurs="0" />
+              <xs:element name="BranchName" type="xs:string" minOccurs="0" />
+              <xs:element name="RateType" type="xs:string" minOccurs="0" />
+              <xs:element name="TransactionType" type="xs:string" minOccurs="0" />
+              <xs:element name="BSubjectStatus" type="xs:string" minOccurs="0" />
+              <xs:element name="BBankCode" type="xs:string" minOccurs="0" />
+              <xs:element name="BCountryId" type="xs:string" minOccurs="0" />
+              <xs:element name="BBusinessTypeId" type="xs:string" minOccurs="0" />
+              <xs:element name="SSubjectStatusId" type="xs:string" minOccurs="0" />
+              <xs:element name="SBankCode" type="xs:string" minOccurs="0" />
+              <xs:element name="SBusinessTypeId" type="xs:string" minOccurs="0" />
+              <xs:element name="SourceFunds" type="xs:string" minOccurs="0" />
+              <xs:element name="SourceAccNum" type="xs:string" minOccurs="0" />
+              <xs:element name="DocumentLHBUId" type="xs:string" minOccurs="0" />
+              <xs:element name="DocumentLHBUDescription" type="xs:string" minOccurs="0" />
+              <xs:element name="SourceNominal" type="xs:decimal" minOccurs="0" />
+              <xs:element name="DocumentTransId" type="xs:string" minOccurs="0" />
+              <xs:element name="DocumentTransDescription" type="xs:string" minOccurs="0" />
+              <xs:element name="DocUnderlyingNum" type="xs:string" minOccurs="0" />
+              <xs:element name="SourceAccName" type="xs:string" minOccurs="0" />
+              <xs:element name="PurposeId" type="xs:string" minOccurs="0" />
+              <xs:element name="PurposeDescription" type="xs:string" minOccurs="0" />
+              <xs:element name="DocumentTransactionLink" type="xs:string" minOccurs="0" />
+              <xs:element name="DocumentStatementUnderlimitLink" type="xs:string" minOccurs="0" />
+              <xs:element name="DocumentStatementOverlimitLink" type="xs:string" minOccurs="0" />
+              <xs:element name="TransFormulirLink" type="xs:string" minOccurs="0" />
+              <xs:element name="EditBy" type="xs:string" minOccurs="0" />
+              <xs:element name="EditDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="ApproveBy" type="xs:string" minOccurs="0" />
+              <xs:element name="ApproveDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="Status" type="xs:string" minOccurs="0" />
+              <xs:element name="Period" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="AmountTransaction" type="xs:decimal" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<xs:schema id="Schema1" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xs:element name="AdjudicationReceipt" msdata:IsDataSet="true" msdata:UseCurrentLocale="true">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="TransactionLimit">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="AccNo" type="xs:string" minOccurs="0" />
+              <xs:element name="AccName" type="xs:string" minOccurs="0" />
+              <xs:element name="Branch" type="xs:string" minOccurs="0" />
+              <xs:element name="TODLimitCurrency" type="xs:string" minOccurs="0" />
+              <xs:element name="TODLimit" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TODTrans" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TOMLimitCurrency" type="xs:string" minOccurs="0" />
+              <xs:element name="TOMLimit" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TOMTrans" type="xs:decimal" minOccurs="0" />
+              <xs:element name="SPOTLimitCurrency" type="xs:string" minOccurs="0" />
+              <xs:element name="SPOTLimit" type="xs:decimal" minOccurs="0" />
+              <xs:element name="SPOTTrans" type="xs:decimal" minOccurs="0" />
+              <xs:element name="AllLimitCurrency" type="xs:string" minOccurs="0" />
+              <xs:element name="AllLimit" type="xs:decimal" minOccurs="0" />
+              <xs:element name="AllTrans" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TransactionType" type="xs:string" minOccurs="0" />
+              <xs:element name="DealType" type="xs:string" minOccurs="0" />
+              <xs:element name="BaseCurrency" type="xs:string" minOccurs="0" />
+              <xs:element name="DealPeriod" type="xs:string" minOccurs="0" />
+              <xs:element name="AmountDeal" type="xs:decimal" minOccurs="0" />
+              <xs:element name="UsedRate" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TotalDeal" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TotalAllDeal" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TotalTOD" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TotalTOM" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TotalSPOT" type="xs:decimal" minOccurs="0" />
+              <xs:element name="CurrencyDeal" type="xs:string" minOccurs="0" />
+              <xs:element name="TODCurrency" type="xs:string" minOccurs="0" />
+              <xs:element name="TOMCurrency" type="xs:string" minOccurs="0" />
+              <xs:element name="SPOTCurrency" type="xs:string" minOccurs="0" />
+              <xs:element name="AllCurrency" type="xs:string" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+

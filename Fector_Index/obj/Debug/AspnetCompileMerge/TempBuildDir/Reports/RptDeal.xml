@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<xs:schema id="Schema1" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xs:element name="AdjudicationReceipt" msdata:IsDataSet="true" msdata:UseCurrentLocale="true">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="Deal">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Period" type="xs:string" minOccurs="0" />
+              <xs:element name="DealNumber" type="xs:string" minOccurs="0" />
+              <xs:element name="AccNum" type="xs:string" minOccurs="0" />
+              <xs:element name="AccName" type="xs:string" minOccurs="0" />
+              <xs:element name="BranchId" type="xs:string" minOccurs="0" />
+              <xs:element name="Branch" type="xs:string" minOccurs="0" />
+              <xs:element name="TransactionType" type="xs:string" minOccurs="0" />
+              <xs:element name="DealType" type="xs:string" minOccurs="0" />
+              <xs:element name="CurrencyDeal" type="xs:string" minOccurs="0" />
+              <xs:element name="DealRate" type="xs:decimal" minOccurs="0" />
+              <xs:element name="AmountDeal" type="xs:decimal" minOccurs="0" />
+              <xs:element name="CurrencyCustomer" type="xs:string" minOccurs="0" />
+              <xs:element name="AmountCustomer" type="xs:decimal" minOccurs="0" />
+              <xs:element name="DealPeriod" type="xs:string" minOccurs="0" />
+              <xs:element name="DealDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="CloseReason" type="xs:string" minOccurs="0" />
+              <xs:element name="EditBy" type="xs:string" minOccurs="0" />
+              <xs:element name="EditDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="ApprovalBy" type="xs:string" minOccurs="0" />
+              <xs:element name="ApprovalDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="Status" type="xs:dateTime" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

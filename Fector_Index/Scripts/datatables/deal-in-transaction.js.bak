@@ -1,0 +1,70 @@
+﻿$(document).ready(function () {
+    $('#GvTransDetail thead tr#GvFilter th.filter').each(function () {
+        var title = $('#GvTransDetail thead tr.GvDetail th').eq($(this).index()).text().trim();
+    });
+    var table = $('#GvTransDetail').DataTable({
+        "sDom": '<"top"i>rt<"bottom"l><"clear">',
+        "autoWidth": false,
+        "info": false,
+        "bSort": false,
+        "sAjaxSource": ajaxHandler,
+        "bLengthChange": false,
+        "oLanguage": {
+            "sProcessing": "<div class='text-center'><img src='" + baseUrl + "/Content/Images/loading.gif'>"
+        },
+        "bProcessing": true,
+        "bServerSide": true,
+        "aoColumns": [
+            { "sName": "DealNumber", "sWidth": "20%" },
+            { "sName": "AccNum", "sWidth": "20%" },
+            { "sName": "AccName", "sWidth": "40%" },
+			{ "sName": "BranchId", "sWidth": "20%" },
+			{ "sName": "TransactionType", "sWidth": "20%" },
+			{ "sName": "DealType", "sWidth": "20%" },
+			{ "sName": "CurrencyDeal", "sWidth": "20%" },
+			{ "sName": "DealRate", "sWidth": "20%" },
+			{ "sName": "AmountDeal", "sWidth": "50%" },
+			{ "sName": "CurrencyCustomer", "sWidth": "20%" },
+			{ "sName": "RateCustomer", "sWidth": "20%" },
+			{ "sName": "AmountCustomer", "sWidth": "50%" },
+			{ "sName": "DealPeriod", "sWidth": "20%" },
+			{ "sName": "DealDate", "sWidth": "20%" },
+			{ "sName": "Status", "sWidth": "20%" },
+            { "sName": "Task", "sWidth": "10%" },
+        ],
+        "fnRowCallback": function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+            var id = $('td:eq(0)', nRow).text();
+
+            $('td:eq(3)', nRow).addClass("hidden");
+            $('td:eq(4)', nRow).addClass("hidden");
+            $('td:eq(5)', nRow).addClass("hidden");
+            $('td:eq(6)', nRow).addClass("hidden");
+            $('td:eq(7)', nRow).addClass("hidden");
+            $('td:eq(9)', nRow).addClass("hidden");
+            $('td:eq(10)', nRow).addClass("hidden");
+            $('td:eq(12)', nRow).addClass("hidden");
+            $('td:eq(13)', nRow).addClass("hidden");
+            $('td:eq(14)', nRow).addClass("hidden");
+            var controller = '<form id="formDelete" action="' + baseUrl + 'ExchangeTransaction/Delete" method="post"  class="btn btn-info btn-sm fa fa-trash-o" title="Delete">' +
+                          '<input id="id" name="id" type="hidden" value="' + id + '">' +
+                          '</form><div>';
+            $('td:eq(15)', nRow).html(controller);
+
+            if (Math.ceil((this.fnSettings().fnRecordsDisplay()) / this.fnSettings()._iDisplayLength) > 1) {
+                $('.dataTables_paginate').css("display", "block").addClass("text-center");
+            } else {
+                $('.dataTables_paginate').css("display", "none");
+            }
+        }
+    });
+    $('#GvTransDetail tbody').on("click", "#formDelete", function () {
+        var obj = $(this);
+        bootbox.confirm("Are you sure want to delete this data?", function (result) {
+            if (result) {
+                obj.submit();
+                SearchDeal($('#DealNumber').val(), $('#tempDealNumber').val());
+                $('#temp').load('BrowseDeal');
+            }
+        });
+    });
+});

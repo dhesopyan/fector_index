@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<xs:schema id="Schema1" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xs:element name="AdjudicationReceipt" msdata:IsDataSet="true" msdata:UseCurrentLocale="true">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="ExchangeTransactionHead">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="TransNum" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="AccName" type="xs:string" minOccurs="0" />
+              <xs:element name="AccNum" type="xs:string" minOccurs="0" />
+              <xs:element name="BranchId" type="xs:string" minOccurs="0" />
+              <xs:element name="BranchName" type="xs:string" minOccurs="0" />
+              <xs:element name="RateType" type="xs:string" minOccurs="0" />
+              <xs:element name="TransactionType" type="xs:string" minOccurs="0" />
+              <xs:element name="SourceFunds" type="xs:string" minOccurs="0" />
+              <xs:element name="SourceNominal" type="xs:decimal" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+

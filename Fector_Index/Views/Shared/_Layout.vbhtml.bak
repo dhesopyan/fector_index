@@ -1,0 +1,93 @@
+﻿@Code
+    Dim db As New Fector_Index.FectorEntities
+    Dim usr = Fector_Index.MsUser.GetAllUser(User.Identity.Name, db)
+    Dim FullName As String = usr.Fullname
+    Dim Branch As String = usr.Branch.Name
+    Dim RoleID As Integer = usr.UserlevelId
+    Dim Role As String = usr.Userlevel.Description
+    Dim CompleteRole As String = Branch & " (" & Role & ")"
+End Code
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="utf-8" />
+    <title>@ViewData("Title") - Fector</title>
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    <meta name="viewport" content="width=device-width" />
+    @Styles.Render("~/Content/css")
+    @Styles.Render("~/Content/themes/base/css")
+</head>
+<body>
+    <div id="page-wrapper">
+        <div id="pnlNavigation">
+            <nav id="top-navbar" class="navbar navbar-default navbar-fixed-top">
+                <div class="container-fluid">
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a href="~/" cssclass="navbar-brand">
+                            <div class="navbar-brand-name">
+                                <img src="~/Content/Images/logo-small.png" />
+                                <span style="color:white; font-size:20pt;">Fector</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                        <ul class="nav navbar-nav">
+                            @For Each menu As Fector_Index.MsMenu In Fector_Index.MsUserAccess.GetMenus(RoleID)
+                                @<li class="dropdown">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">@menu.Description &nbsp;<span class="caret"></span></a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        @For Each submenu As Fector_Index.MsSubMenu In Fector_Index.MsUserAccess.GetSubMenus(RoleID, menu.MenuId)
+                                            @<li>
+                                                <a href="~/@submenu.Link">@submenu.Description</a>
+                                            </li>
+                                        Next
+                                    </ul>
+                                </li>
+                            Next
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" style="padding-top:10px;">
+                                    <div id="lblUserInfo">@FullName &nbsp; <br /> @CompleteRole &nbsp;<span class="caret"></span></div>
+
+                                </a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="~/User/ChangePassword">Change Password</a></li>
+                                    <li class="divider"></li>
+                                    <li>@Html.ActionLink("Logout", "Logout", "User")</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        <div id="page-content">
+            <div class="col-md-12">
+                <ul class="breadcrumb">
+                    @Html.Raw(ViewBag.Breadcrumb)
+                </ul>
+            </div>
+            @RenderBody()
+            <div class="clearfix"></div>
+        </div>
+    </div>
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/mainjs")
+    @Scripts.Render("~/bundles/jqueryui")
+    @RenderSection("scripts", required:=False)
+    <script type="text/javascript">
+        $('select').select2({ width: '100%' });
+    </script>
+</body>
+</html>

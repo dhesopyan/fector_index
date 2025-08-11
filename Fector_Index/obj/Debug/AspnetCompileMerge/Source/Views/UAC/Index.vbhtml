@@ -1,0 +1,88 @@
+﻿@Code
+    ViewData("Title") = "User Access Control"
+    Layout = "~/Views/Shared/_Layout.vbhtml"
+    Dim Action As String = ViewContext.Controller.ValueProvider.GetValue("Action").RawValue
+End Code
+<div class="col-md-12">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <div class="pull-left">
+                <h4>@IIf(Action = "Index", "UAC List", "UAC Approval List")</h4>
+            </div>
+            <div class="pull-right">
+                @If Action = "Index" Then
+                    @<a href="~/UAC/Create" Class="btn btn-primary"><i class="fa fa-plus"></i>&nbsp;Create</a>    
+                End If
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <table id="myTable" class="table FectorTable">
+                        <thead>
+                            <tr id="GvFilter" class="GvHeader">
+                                <th class="hidden">
+                                    &nbsp;
+                                </th>
+                                <th class="filter">
+                                    User Level
+                                </th>
+                                <th>
+                                    &nbsp;
+                                </th>
+                                <th class="filter" id="filterDDL">
+                                    Status
+                                </th>
+                                <th>
+                                    <a id="BtnFilter" class="btn btn-primary btn-sm">
+                                        <span class="fa fa-search"></span>
+                                    </a>
+                                    <a id="BtnClear" class="btn btn-primary btn-sm">
+                                        <span class="fa fa-refresh"></span>
+                                    </a>
+                                </th>
+                            </tr>
+                            <tr id="GvHeader" class="GvHeader">
+                                <th class="hidden">
+                                    UserlevelId
+                                </th>
+                                <th>
+                                    User Level
+                                </th>
+                                <th>
+                                    Use Limit
+                                </th>
+                                <th>
+                                    Status
+                                </th>
+                                <th>&nbsp;</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .dataTables_filter, .dataTables_info {
+        display: none;
+    }
+</style>
+@Section scripts
+    <script>
+        var baseUrl = '@Url.Content("~")';
+    </script>
+    @If Action = "Index" Then
+        @<script>
+            var ajaxHandler = '@Url.Action("DTUACAjaxHandler")';
+        </script>
+        @Scripts.Render("~/Scripts/datatables/uac-index.js")
+    ElseIf Action = "Approval" Then
+        @<script>
+            var ajaxHandler = '@Url.Action("DTUACApprovalAjaxHandler")';
+        </script>
+        @Scripts.Render("~/Scripts/datatables/uac-approval.js")
+    End If
+End Section

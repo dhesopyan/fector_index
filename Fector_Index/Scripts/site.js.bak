@@ -1,0 +1,39 @@
+﻿$(document).ready(function () {
+    setAutoNumeric();
+});
+
+function setAutoNumeric() {
+    $('.autoNumeric').each(function () {
+        var value = $(this).val();
+        var maxValue = $(this).attr("autoNumeric-MaxValue");
+        var minValue = $(this).attr("autoNumeric-MinValue");
+        var decimalPlace = $(this).attr("autoNumeric-DecimalPlace");
+        var thousandSeparator = $(this).attr("autoNumeric-ThousandSeparator");
+
+        if (decimalPlace == null) {
+            decimalPlace = 0;
+        }
+        if (maxValue == null) {
+            maxValue = "9999999999999.99";
+        }
+        if (minValue == null) {
+            minValue = "-9999999999999.99";
+        }
+        if (thousandSeparator == null) {
+            thousandSeparator = ",";
+        }
+        value = value.replace(/,/g, "");
+        $(this).val(value);
+
+        $(this).autoNumeric('init', {
+            mDec: 2,
+            vMax: maxValue,
+            vMin: minValue,
+            aSep: thousandSeparator
+        });
+
+        if (value != null) {
+            $(this).autoNumeric('set', value);
+        }
+    });
+}

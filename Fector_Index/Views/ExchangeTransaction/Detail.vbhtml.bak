@@ -1,0 +1,234 @@
+﻿@ModelType Fector_Index.ExchangeTransactionViewModel
+@Code
+    Layout = "~/Views/Shared/_Layout.vbhtml"
+    Dim Action As String = ViewContext.Controller.ValueProvider.GetValue("Action").RawValue
+    Dim Branch As SelectList = ViewBag.Branch
+    Dim CurrencyNoIDR As SelectList = ViewBag.CurrencyNoIDR
+    Dim Currency As SelectList = ViewBag.Currency
+    Dim Status As SelectList = ViewBag.Status
+    Dim LHBUDocumentOption As SelectList = ViewBag.LHBUDocumentOption
+    Dim TransactionTypeOption As IEnumerable(Of SelectListItem) = ViewBag.TransactionTypeOption
+    Dim RateTypeOption As IEnumerable(Of SelectListItem) = ViewBag.RateTypeOption
+    Dim DealPeriodOption As IEnumerable(Of SelectListItem) = ViewBag.DealPeriodOption
+    Dim DocumentTransOption As IEnumerable(Of SelectListItem) = ViewBag.DocumentTransOption
+    Dim PurposeIdOption As IEnumerable(Of SelectListItem) = ViewBag.PurposeIdOption
+    Dim SourceFundsOption As IEnumerable(Of SelectListItem) = ViewBag.SourceFundsOption
+End Code
+
+<div class="col-md-12">
+    @Using Html.BeginForm(Action, "ExchangeTransaction", FormMethod.Post, New With {.class = "panel panel-default", .id = "frmData", .enctype = "multipart/form-data"})
+        @Html.AntiForgeryToken()
+        @<div class="panel-heading">
+            <div class="pull-left">
+                <h4>Transaction Information</h4>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        @<div class="panel-body">
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.TransNum)</label>
+                    @Html.CustomTextBoxFor(Function(f) f.TransNum, New With {.class = "form-control", .placeholder = "Transaction Number", .style = "text-transform:uppercase"})
+                    @Html.ValidationMessageFor(Function(f) f.TransNum, String.Empty, New With {.class = "help-block"})
+                </div>
+            </div>
+            <div class="row useDeal">
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.DealNumber)</label>
+                    <div class="input-group">
+                        @Html.CustomTextBoxFor(Function(f) f.DealNumber, New With {.class = "form-control", .placeholder = "Deal Number"})
+                        <input type="text" id="tempDealNumber" class="hidden" />
+                        <span class="input-group-btn">
+                            <a href="" class="modal-link btn btn-default" id="btnadddeal" title="Browse"><i class='fa fa-plus'></i></a>
+                        </span>
+                    </div>
+                    @Html.ValidationMessageFor(Function(f) f.DealNumber, String.Empty, New With {.class = "help-block"})
+                </div>
+            </div>
+            <div class="row useDeal" id="temp">
+                @Html.Partial("_DealInTransaction")
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.AccNum)</label>
+                    <div class="input-group">
+                        @Html.CustomTextBoxFor(Function(f) f.AccNum, New With {.class = "form-control", .placeholder = "Account Number"})
+                        <span class="input-group-btn">
+                            <a href="#" class="modal-link btn btn-default" id="btnclearaccnum" title="Clear"><i class='fa fa-refresh'></i></a>
+                            <a href="@Url.Action("BrowseAccNum", "ExchangeTransaction")" class="modal-link btn btn-default" id="btnsearchaccnum" title="Browse"><i class='fa fa-search'></i></a>
+                        </span>
+                    </div>
+                    @Html.ValidationMessageFor(Function(f) f.AccNum, String.Empty, New With {.class = "help-block"})
+                </div>
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.AccName)</label>
+                    @Html.CustomTextBoxFor(Function(f) f.AccName, New With {.class = "form-control", .placeholder = "Account Name"})
+                    @Html.ValidationMessageFor(Function(f) f.AccName, String.Empty, New With {.class = "help-block"})
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.TransactionType)</label>
+                    @Html.DropDownListFor(Function(f) f.TransactionType, TransactionTypeOption, New With {.class = "form-control", .placeholder = "Transaction Type"})
+                    @Html.ValidationMessageFor(Function(f) f.TransactionType, String.Empty, New With {.class = "help-block"})
+                </div>
+                <div class="form-group col-md-6">
+                    <label>&nbsp</label>
+                    @Html.DropDownListFor(Function(f) f.RateType, RateTypeOption, New With {.class = "form-control", .placeholder = "Rate Type"})
+                    @Html.ValidationMessageFor(Function(f) f.RateType, String.Empty, New With {.class = "help-block"})
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.TransactionCurrency)</label>
+                    @Html.DropDownListFor(Function(f) f.TransactionCurrency, CurrencyNoIDR, New With {.class = "form-control", .placeholder = "Transaction Currency"})
+                    @Html.ValidationMessageFor(Function(f) f.TransactionCurrency, String.Empty, New With {.class = "help-block"})
+                </div>
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.CustomerCurrency)</label>
+                    @Html.DropDownListFor(Function(f) f.CustomerCurrency, Currency, New With {.class = "form-control", .placeholder = "Customer Currency"})
+                    @Html.ValidationMessageFor(Function(f) f.CustomerCurrency, String.Empty, New With {.class = "help-block"})
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.TransactionNominal)</label>
+                    @Html.CustomTextBoxFor(Function(f) f.TransactionNominal, New With {.class = "form-control autoNumeric", .placeholder = "Transaction Nominal"})
+                    @Html.ValidationMessageFor(Function(f) f.TransactionNominal, String.Empty, New With {.class = "help-block"})
+                </div>
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.TransactionRate)</label>
+                    @Html.CustomTextBoxFor(Function(f) f.TransactionRate, New With {.class = "form-control autoNumeric", .placeholder = "Transaction Rate"})
+                    @Html.ValidationMessageFor(Function(f) f.TransactionRate, String.Empty, New With {.class = "help-block"})
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.CustomerNominal)</label>
+                    @Html.CustomTextBoxFor(Function(f) f.CustomerNominal, New With {.class = "form-control autoNumeric", .placeholder = "Convertion Nominal"})
+                    @Html.ValidationMessageFor(Function(f) f.CustomerNominal, String.Empty, New With {.class = "help-block"})
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.ValuePeriod)</label>
+                    @Html.DropDownListFor(Function(f) f.ValuePeriod, DealPeriodOption, New With {.class = "form-control", .placeholder = "Value Period"})
+                    @Html.ValidationMessageFor(Function(f) f.ValuePeriod, String.Empty, New With {.class = "help-block"})
+                </div>
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.ValueDate)</label>
+                    @Html.CustomTextBoxFor(Function(f) f.ValueDate, New With {.class = "form-control", .placeholder = "Value Date"})
+                    @Html.ValidationMessageFor(Function(f) f.ValueDate, String.Empty, New With {.class = "help-block"})
+                </div>
+            </div>
+            <div class="row">
+                 <div class="form-group col-md-6">
+                     <label>@Html.DisplayNameFor(Function(f) f.SourceFunds)</label>
+                     @Html.DropDownListFor(Function(f) f.SourceFunds, SourceFundsOption, New With {.class = "form-control", .placeholder = "Source of Funds"})
+                     @Html.ValidationMessageFor(Function(f) f.SourceFunds, String.Empty, New With {.class = "help-block"})
+                 </div>
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.DocumentTransId)</label>
+                    @Html.DropDownListFor(Function(f) f.DocumentTransId, DocumentTransOption, New With {.class = "form-control", .placeholder = "Document Transaction"})
+                    @Html.ValidationMessageFor(Function(f) f.DocumentTransId, String.Empty, New With {.class = "help-block"})
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.DocumentLHBUId)</label>
+                    @Html.DropDownListFor(Function(f) f.DocumentLHBUId, LHBUDocumentOption, "Select LHBU Document", New With {.class = "form-control", .placeholder = "LHBU Document"})
+                    @Html.ValidationMessageFor(Function(f) f.DocumentLHBUId, String.Empty, New With {.class = "help-block"})
+                </div>
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.PurposeId)</label>
+                    @Html.DropDownListFor(Function(f) f.PurposeId, PurposeIdOption, "Select LHBU Purpose",  New With {.class = "form-control", .placeholder = "LHBU Purpose"})
+                    @Html.ValidationMessageFor(Function(f) f.PurposeId, String.Empty, New With {.class = "help-block"})
+                </div>
+            </div>
+            <div class="row statementdoc">
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.FileDocumentStatementName)</label>
+                    <div class="input-group">
+                        @Html.CustomTextBoxFor(Function(f) f.FileDocumentStatementName, New With {.class = "form-control", .placeholder = "File Letter of Statement"})
+                        @Html.CustomTextBoxFor(Function(f) f.FileDocumentStatement, New With {.type = "file", .class = "hidden", .onchange = "ChangeText(this, 'FileDocumentStatementName')"})
+                        <span class="input-group-btn">
+                            <a href="#" class="modal-link btn btn-default" id="btnclearuploaddocstatement" title="Clear"><i class='fa fa-refresh'></i></a>
+                            <a href="" onclick="document.getElementById('FileDocumentStatement').click(); return false" class="modal-link btn btn-default" id="btnsearchfiledocstatement" title="Browse"><i class='fa fa-search'></i></a>
+                        </span>
+                    </div>
+                    @Html.ValidationMessageFor(Function(f) f.FileDocumentStatementName, String.Empty, New With {.class = "help-block"})
+                </div>
+            </div>
+            <div class="row referencestatementdoc">
+                <div class="form-group col-md-6">
+                    <label>@Html.DisplayNameFor(Function(f) f.PrevRefDocumentStatementName)</label>
+                    <a id="linktostatementletter" href="" target="_blank">Previouse Letter of Statement</a>
+                </div>
+             </div>
+             <div class="row transform">
+                 <div class="form-group col-md-6">
+                     <label>@Html.DisplayNameFor(Function(f) f.FileTransFormulirName)</label>
+                     <div class="input-group">
+                         @Html.CustomTextBoxFor(Function(f) f.FileTransFormulirName, New With {.class = "form-control", .placeholder = "File Transaction Form"})
+                         @Html.CustomTextBoxFor(Function(f) f.FileTransFormulir, New With {.type = "file", .class = "hidden", .onchange = "ChangeText(this, 'FileTransFormulirName')"})
+                         <span class="input-group-btn">
+                             <a href="#" class="modal-link btn btn-default" id="btnclearuploadtransformulir" title="Clear"><i class='fa fa-refresh'></i></a>
+                             <a href="" onclick="document.getElementById('FileTransFormulir').click(); return false" class="modal-link btn btn-default" id="btnsearchfiletransformulir" title="Browse"><i class='fa fa-search'></i></a>
+                         </span>
+                     </div>
+                     @Html.ValidationMessageFor(Function(f) f.FileTransFormulirName, String.Empty, New With {.class = "help-block"})
+                 </div>
+             </div>
+             <div class="row trandoc">
+                 <div class="form-group col-md-6">
+                     <label>@Html.DisplayNameFor(Function(f) f.FileDocumentTransactionName)</label>
+                     <div class="input-group">
+                         @Html.CustomTextBoxFor(Function(f) f.FileDocumentTransactionName, New With {.class = "form-control", .placeholder = "File Document Transaction"})
+                         @Html.CustomTextBoxFor(Function(f) f.FileDocumentTransaction, New With {.type = "file", .class = "hidden", .onchange = "ChangeText(this, 'FileDocumentTransactionName')"})
+                         <span class="input-group-btn">
+                             <a href="#" class="modal-link btn btn-default" id="btnclearuploaddoctransaction" title="Clear"><i class='fa fa-refresh'></i></a>
+                             <a href="" onclick="document.getElementById('FileDocumentTransaction').click(); return false" class="modal-link btn btn-default" id="btnsearchfiledocstatement" title="Browse"><i class='fa fa-search'></i></a>
+                         </span>
+                     </div>
+                     @Html.ValidationMessageFor(Function(f) f.FileDocumentTransactionName, String.Empty, New With {.class = "help-block"})
+                 </div>
+             </div>
+        </div>
+        @<div class="panel-footer">
+            <div class="pull-right">
+                @If (Action = "Process") Then
+                    @<button name="approvalButton" class="btn btn-primary" value="Approve"><i class="fa fa-check"></i> Approve</button>
+                    @<button name="approvalButton" class="btn btn-primary" value="Reject"><i class="fa fa-close"></i> Reject</button>
+                    @<a id="BtnBack" class="btn btn-danger" href="@Url.Action("Approval", "ExchangeTransaction")"><i class="fa fa-arrow-left"></i> Back</a>
+                ElseIf (Action = "Deal") Or (Action = "Counter") Or (Action = "Edit") Then
+                    @<button id="BtnSubmit" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                    @<a id="BtnBack" class="btn btn-danger" href="@Url.Action("Index", "ExchangeTransaction")"><i class="fa fa-arrow-left"></i> Back</a>
+                Else
+                    @<button name="deleteButton" class="btn btn-primary" value="Delete"><i class="fa fa-trash"></i> Delete</button>
+                    @<a id="BtnBack" class="btn btn-danger" href="@Url.Action("Index", "ExhchangeTransaction")"><i class="fa fa-arrow-left"></i> Back</a>
+                End If
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        @<style>
+             .modal-content {
+                 position: fixed;
+                 left: 0px;
+                 right: 0px;
+                 width: 800px !important;
+                 height: auto !important;
+                 margin: auto auto !important;
+             }
+        </style>
+        @<div id="modal-container" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-content">
+            </div>
+        </div>
+    End Using
+    @Section scripts
+        <script>
+            var action = '@(Action)';
+        </script>
+        @Scripts.Render("~/Scripts/transaction.js")
+    End Section
+</div>

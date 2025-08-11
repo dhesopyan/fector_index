@@ -1,0 +1,14 @@
+﻿Imports System.ComponentModel.DataAnnotations
+Imports System.ComponentModel.DataAnnotations.Schema
+Imports System.ComponentModel
+
+Public Class MsUACViewModel
+    Public Property UserlevelId As Integer
+    Public Property Description As String
+    Public Property FlagUseLimit As Boolean
+
+    <DisplayName("LHBU Documents")> _
+    Public Property UACLists As String()
+    Public Property UAC As List(Of MsUserAccess)
+
+End Class

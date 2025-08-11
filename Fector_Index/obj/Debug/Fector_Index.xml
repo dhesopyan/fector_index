@@ -1,0 +1,44 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Fector_Index
+</name>
+</assembly>
+<members>
+<member name="P:Fector_Index.jQueryDataTableParamModel.sEcho">
+	<summary>
+ Request sequence number sent by DataTable,
+ same value must be returned in response
+ </summary>
+</member><member name="P:Fector_Index.jQueryDataTableParamModel.sSearch">
+	<summary>
+ Text used for filtering
+ </summary>
+</member><member name="P:Fector_Index.jQueryDataTableParamModel.iDisplayLength">
+	<summary>
+ Number of records that should be shown in table
+ </summary>
+</member><member name="P:Fector_Index.jQueryDataTableParamModel.iDisplayStart">
+	<summary>
+ First record that should be shown(used for paging)
+ </summary>
+</member><member name="P:Fector_Index.jQueryDataTableParamModel.iColumns">
+	<summary>
+ Number of columns in table
+ </summary>
+</member><member name="P:Fector_Index.jQueryDataTableParamModel.iSortingCols">
+	<summary>
+ Number of columns that are used in sorting
+ </summary>
+</member><member name="P:Fector_Index.jQueryDataTableParamModel.sColumns">
+	<summary>
+ Comma separated list of column names
+ </summary>
+</member><member name="T:Fector_Index.jQueryDataTableParamModel">
+	<summary>
+ Class that encapsulates most common parameters sent by DataTables plugin
+ </summary>
+</member>
+</members>
+</doc>

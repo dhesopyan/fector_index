@@ -1,0 +1,353 @@
+﻿$(document).ready(function () {
+    $("#TransNum").attr("readonly", "readonly");
+    $("#AccName").attr("readonly", "readonly");
+    $("#AccNum").attr("readonly", "readonly");
+    $("#CustomerNominal").attr("readonly", "readonly");
+    $("#FileDocumentTransactionName").attr("readonly", "readonly");
+    $("#FileDocumentStatementName").attr("readonly", "readonly");
+    $("#FileTransFormulirName").attr("readonly", "readonly");
+
+    $(".statementdoc").hide();
+    $(".transform").hide();
+    $(".trandoc").hide();
+    
+    var d = new Date();
+
+    var month = d.getMonth() + 1;
+    var day = d.getDate();
+
+    var output = (day < 10 ? '0' : '') + day + '-' + (month < 10 ? '0' : '') + month + '-' + d.getFullYear();
+
+    $('#ValueDate').val(output);
+    $('#ValueDate').attr('readonly', 'readonly');
+
+    if (action == "Counter")
+        SetControl(false);
+    else
+        SetControl(true);
+
+    calculateConvertionWithGetRate($("#TransactionType").val(), $("#RateType").val(), $("#TransactionCurrency").val(), $("#CustomerCurrency").val(), $("#TransactionNominal").val())
+    getLHBUDropdown($('#DocumentTransId').val());
+    checkDocumentRequirement();
+});
+
+function SetControl(useDeal) {
+    if (useDeal) {
+        if ($("#AccNum").val() != "") {
+            $("#btnclearaccnum").prop("disabled", true);
+            $("#btnclearaccnum").addClass("disabled");
+            $("#btnsearchaccnum").prop("disabled", true);
+            $("#btnsearchaccnum").addClass("disabled");
+            alert($("#btnclearaccnum").prop("disabled"));
+        }
+        else {
+            $("#btnclearaccnum").prop("disabled", false);
+            $("#btnclearaccnum").removeClass("disabled");
+            $("#btnsearchaccnum").prop("disabled", false);
+            $("#btnsearchaccnum").removeClass("disabled");
+        }
+        $(".useDeal").show();
+        $("#TransactionType").prop("disabled", true);
+        $("#RateType").prop("disabled", true);
+        $("#TransactionCurrency").prop("disabled", true);
+        $("#CustomerCurrency").prop("disabled", true);
+    }
+    else {
+        $(".useDeal").hide();
+        $("#btnclearaccnum").prop("disabled", false);
+        $("#btnclearaccnum").removeClass("disabled");
+        $("#btnsearchaccnum").prop("disabled", false);
+        $("#btnsearchaccnum").removeClass("disabled");
+    }
+}
+
+function checkDocumentRequirement() {
+    $(".statementdoc").hide();
+    $(".referencestatementdoc").hide();
+    $(".transform").hide();
+    $(".trandoc").hide();
+    
+    var accno = $("#AccNum").val()
+    var amount = parseFloat($("#TransactionNominal").val().replaceAll(",", "").replaceAll(".", ","));
+    var basecurrency = $("#TransactionCurrency").val();
+    var countercurrency = $("#CustomerCurrency").val();
+    var trantype = $("#TransactionType").val();
+    var ratetype = $("#RateType").val();
+    var exchangerate = parseFloat($("#TransactionRate").val().replaceAll(",", "").replaceAll(".", ","));
+    var doctrans = $("#DocumentTransId").val();
+
+    if (accno != "" && amount > 0 && exchangerate > 0 && basecurrency != "" && countercurrency != "")
+    {
+        var convertedamount = amount * exchangerate
+        $.ajax({
+            type: 'POST',
+            url: 'JsOnCheckDocumentRequirement',
+            data: { accno: accno, convertedamount: convertedamount, countercurrency: countercurrency, trantype: trantype, ratetype: ratetype, doctrans: doctrans },
+            cache: false,
+            success: function (data) {
+                if (data.UnderLimit && !data.HaveStatementLetter) {
+                    //under limit and do not have statement letter this month
+                    $(".statementdoc").show();
+                }
+                else if (!data.UnderLimit && !data.HaveNPWP) {
+                    //over limit and do not have npwp
+                    bootbox.alert("Transaction limit reach and customer does not have NPWP. <br>Please complete Customer NPWP data in core banking!");
+                }
+                else if (!data.UnderLimit && data.HaveNPWP && !data.UnderlyingisFinal) {
+                    //under limit and have npwp and underlying temporary
+                    $(".statementdoc").show();
+                    $(".transform").show();
+                }
+                else if (!data.UnderLimit && data.HaveNPWP && data.UnderlyingisFinal && !data.HaveStatementLetter) {
+                    //under limit and have npwp and underlying final and do not have statement letter
+                    $(".statementdoc").show();
+                    $(".transform").show();
+                }
+                else if (!data.UnderLimit && data.HaveNPWP && data.UnderlyingisFinal && data.HaveStatementLetter) {
+                    //under limit and have npwp and underlying final and have statement letter
+                    $(".referencestatementdoc").show();
+                    $(".transform").show();
+                    $("#PrevRefDocumentStatementName").val(data.StatementLetterLink);
+                }
+            }
+        });
+    }
+}
+
+$("#TransactionRate").change(function () {
+    calculateConvertion($("#TransactionType").val(), $("#RateType").val(), $("#TransactionCurrency").val(), $("#CustomerCurrency").val(), $("#TransactionNominal").val(), $("#TransactionRate").val())
+    checkDocumentRequirement();
+});
+
+$("#TransactionType, #RateType, #TransactionCurrency, #CustomerCurrency, #TransactionNominal").change(function () {
+    calculateConvertionWithGetRate($("#TransactionType").val(), $("#RateType").val(), $("#TransactionCurrency").val(), $("#CustomerCurrency").val(), $("#TransactionNominal").val())
+    checkDocumentRequirement();
+});
+
+
+function calculateConvertionWithGetRate(tranType, rateType, fromCurr, toCurr, amount) {
+    $.ajax({
+        type: 'POST',
+        url: 'JsOnGetRate',
+        data: { tranType: tranType, rateType: rateType, fromCurr: fromCurr, toCurr: toCurr },
+        cache: false,
+        success: function (data) {
+            newexrate = data.exchangeRate;
+            $("#TransactionRate").val(parseFloat(newexrate).toLocaleString());
+            calculateConvertion(tranType, rateType, fromCurr, toCurr, amount, String(newexrate).replaceAll(",","").replaceAll(".",","));
+        }
+    });
+}
+
+function calculateConvertion(tranType, rateType, fromCurr, toCurr, amount, rate) {
+    var convAmount = 0.0;
+    if (!rate) {
+        convAmount = 0.0;
+    }
+    else {
+        if (!amount) {
+            convAmount = 0.0;
+        }
+        else {
+            convAmount = parseFloat(amount.replaceAll(",", "").replaceAll(".", ",")) * parseFloat(rate.replaceAll(",", "").replaceAll(".", ","));
+        }
+    }
+    $("#CustomerNominal").val(parseFloat(convAmount).toLocaleString())
+}
+
+function SearchDeal(DealNumber, JoinStr) {
+    $.ajax({
+        type: 'GET',
+        url: '@Url.Action("SearchDeal")',
+        data: { DealNumber: DealNumber, JoinStr: JoinStr },
+        cache: false,
+        success: function (result) {
+            $('#DealNumber').val('');
+            $('#tempDealNumber').val(result);
+        }
+    });
+};
+
+$(function () {
+    $("body").on("click", "#BtnSubmit", function (e) {
+        $("#frmData").submit();
+    });
+
+    $('body').on('click', '#btnsearchaccnum', function (e) {
+        e.preventDefault();
+        var link = $(this).attr('href');
+        $(this).attr('href', link);
+        $(this).attr('data-target', '#modal-container');
+        $(this).attr('data-toggle', 'modal');
+    });
+
+    $("body").on("click", "#btnclearaccnum", function (e) {
+        e.preventDefault();
+        $("#AccName").val("");
+        $("#AccNum").val("")
+    });
+
+    $('body').on('click', '#btnclearuploaddoctransaction', function (e) {
+        e.preventDefault();
+        $('#FileDocumentTransactionName').val("");
+        $('#FileDocumentTransaction').val("");
+    });
+
+    $('body').on('click', '#btnclearuploaddocstatement', function (e) {
+        e.preventDefault();
+        $('#FileDocumentStatement').val("");
+        $('#txtUploadFileDocStatement').val("");
+    });
+    $('body').on('click', '#btnclearuploadtransformulir', function (e) {
+        e.preventDefault();
+        $('#FileTransFormulir').val("");
+        $('#txtUploadFileTransFormulir').val("");
+    });
+
+    $('body').on('click', '#btnadddeal', function (e) {
+        e.preventDefault();
+        if ($('#DealNumber').val() != '') {
+            var dealnum = $('#DealNumber').val();
+            dealnum = encodeURIComponent(dealnum);
+            $.ajax({
+                url: '@Url.Action("JsOnCheckDealNumber")' + '?dealnum=' + dealnum,
+                type: 'post',
+                dataType: 'json',
+                success: function (data) {
+                    if (!data.errMessage) {
+                        bootbox.dialog({
+                            message: "Are your sure to add this deal: <br><br> Deal Number: " + data.dealNumber + "<br>Customer: " + data.accNumber + " - " + data.accName + "<br>Transaction Type: " + data.tranType + " - " + data.dealType + "<br>Currency: " + data.fromCurrency + " to " + data.toCurrency + ", Rate: " + data.strexchRate + "<br>Amount: " + data.strdealAmount + "<br>",
+                            title: "Confirmation",
+                            buttons: {
+                                success: {
+                                    label: "Yes",
+                                    className: "btn-success",
+                                    callback: function () {
+                                        $.post('@Url.Action("BrowseDeal", "ExchangeTransaction")').always(function () {
+                                            SearchDeal($('#DealNumber').val(), $('#tempDealNumber').val());
+                                            $('#temp').load('BrowseDeal');
+                                        });
+
+                                        $("#AccNum").val(data.accNumber);
+                                        $("#AccName").val(data.accName);
+                                        $('#TransactionType').select2().select2('val', data.dealType);
+                                        $('#RateType').select2().select2('val', data.tranType);
+                                        $('#TransactionCurrency').select2().select2('val', data.fromCurrency);
+                                        $('#CustomerCurrency').select2().select2('val', data.toCurrency);
+
+                                        SetControl(true);
+                                    }
+                                },
+                                danger: {
+                                    label: "No",
+                                    className: "btn-danger",
+                                    callback: function () {
+                                        $('#DealNumber').val('');
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    else {
+                        bootbox.alert(data.errMessage);
+                    }
+                },
+            });
+        }
+    });
+});
+
+$('#btnuploadfile').click(function () {
+    alert('ada');
+    var formData = new FormData();
+    alert(formData);
+    var file = document.getElementById("File").files
+    alert(file);
+    formData.append("File", file)
+    alert(formData);
+    $.ajax({
+        type: 'POST',
+        url: '@Url.Action("UploadFile")',
+        data: formData,
+        contentType: false,
+        processData: false,
+        cache: false,
+        success: function (result) {
+            $bootbox.alert("Upload success", function () {
+                $('#FileDocumentTransaction').val('');
+            });
+        }
+    });
+});
+
+function ChangeText(FileName, Target) {
+    var FileInput = FileName.value.toString();
+    var strFileName = FileInput;
+    document.getElementById(Target).value = strFileName;
+};
+
+$('#ValuePeriod').change(function () {
+    var valueType = $(this).val();
+
+    $.ajax({
+        url: 'JsOnGetValueDate',
+        type: 'post',
+        dataType: 'json',
+        data: { valuetype: valueType },
+        success: function (data) {
+            $('#ValueDate').val(data.valueDate);
+            if (valueType == "TOD"){
+                $("#ValueDate").datepicker("destroy");
+                $("#ValueDate").attr("style", "cursor:not-allowed")
+            }
+            else
+            {
+                $("#ValueDate").datepicker({
+                    dateFormat: "dd-mm-yy",
+                });
+                $("#ValueDate").attr("style", "cursor:pointer")
+            }
+        }
+    });
+});
+
+$('#DocumentTransId').change(function () {
+    var DocTrans = $(this).val();
+    getLHBUDropdown(DocTrans);
+});
+
+function getLHBUDropdown(DocTrans) {
+    $.ajax({
+            url: 'JsOnGetLHBUDocument',
+            type: 'post',
+            dataType: 'json',
+            data: { DocTrans: DocTrans },
+            success: function (data) {
+                var markup = "<option value=''>Select LHBU Document</option>";
+                for (var x = 0; x < data.length; x++) {
+                    markup += "<option value=" + data[x].DocumentId + ">" + data[x].DocumentLHBUDisplay + "</option>";
+                }
+                $("#DocumentLHBUId").html(markup).show();
+                $("#DocumentLHBUId").select2({ width: '100%' });
+            }
+        });
+
+    $.ajax({
+        url: 'JsOnGetLHBUPurpose',
+        type: 'post',
+        dataType: 'json',
+        data: { DocTrans: DocTrans },
+        success: function (data) {
+            var markup = "<option value=''>Select LHBU Purpose</option>";
+            for (var x = 0; x < data.length; x++) {
+                markup += "<option value=" + data[x].PurposeId + ">" + data[x].PurposeDisplay + "</option>";
+            }
+            $("#PurposeId").html(markup).show();
+            $("#PurposeId").select2({ width: '100%' });
+        }
+    });
+}
+
+String.prototype.replaceAll = function (str1, str2, ignore) {
+    return this.replace(new RegExp(str1.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, "\\$&"), (ignore ? "gi" : "g")), (typeof (str2) == "string") ? str2.replace(/\$/g, "$$$$") : str2);
+}
