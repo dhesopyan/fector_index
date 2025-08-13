@@ -456,8 +456,8 @@ Public Class ExchangeTransactionController
             If model.ListOfDoc.Count = 0 Then
                 Dim doc As New ExchangeTransactionDoc
                 doc.TransNum = transnum
-                doc.DocumentTransId = Nothing
-                doc.DocUnderlyingNum = Nothing
+                doc.DocumentTransId = model.DocumentTransId
+                doc.DocUnderlyingNum = model.DocUnderlyingNum
                 doc.NominalDoc = model.DocUnderlyingNominal
                 doc.DocumentLHBUId = "998"
                 doc.PurposeId = model.PurposeId
@@ -491,7 +491,7 @@ Public Class ExchangeTransactionController
                         End If
 
                         doc.DocumentTransactionLink = "~/Uploads/Transaction/" & transnum & "/" & filename
-                        model.FileTransFormulir.SaveAs(Path & filename)
+                        model.FileDocumentTransaction.SaveAs(Path & filename)
                     End If
                 ElseIf model.PrevRefDocumentTransactionName <> "" Then
                     doc.DocumentTransactionLink = model.PrevRefDocumentTransactionName
@@ -1201,8 +1201,8 @@ Public Class ExchangeTransactionController
             If model.ListOfDoc.Count = 0 Then
                 Dim doc As New ExchangeTransactionDoc
                 doc.TransNum = transnum
-                doc.DocumentTransId = Nothing
-                doc.DocUnderlyingNum = Nothing
+                doc.DocumentTransId = model.DocumentTransId
+                doc.DocUnderlyingNum = model.DocUnderlyingNum
                 doc.NominalDoc = model.DocUnderlyingNominal
                 doc.DocumentLHBUId = "998"
                 doc.PurposeId = model.PurposeId
@@ -1240,7 +1240,7 @@ Public Class ExchangeTransactionController
                         End If
 
                         doc.DocumentTransactionLink = "~/Uploads/Transaction/" & transnum & "/" & filename
-                        model.FileTransFormulir.SaveAs(Path & filename)
+                        model.FileDocumentTransaction.SaveAs(Path & filename)
                     End If
                 ElseIf model.PrevRefDocumentTransactionName <> "" Then
                     doc.DocumentTransactionLink = model.PrevRefDocumentTransactionName
